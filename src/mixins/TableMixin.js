@@ -158,5 +158,17 @@ export  default {
       })
     },
 
+    // ========== 需要显示隐藏表格页时使用 ===================
+    // 切换表格/表单
+    switchPage () {
+      window.scrollTo(0, 0)
+      this.tableShow = !this.tableShow
+    },
+    // 返回表格
+    backToPage (needRefresh) {
+      this.switchPage()
+      needRefresh && this.reloadTable(false)
+    }
+
   }
 }

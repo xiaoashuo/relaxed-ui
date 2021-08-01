@@ -1,6 +1,6 @@
 <template>
-  <page-header-wrapper>
-    <a-card :bordered="false">
+  <div>
+    <a-card v-show="tableShow" :bordered="false">
       <!--            搜索条件-->
       <div class="table-page-search-wrapper">
         <a-form layout="inline">
@@ -16,13 +16,13 @@
               </a-form-item>
             </a-col>
 
-            <a-button type="primary" @click="$refs.table.refresh(true)"
+            <a-button type="primary" @click="reloadTable(true)"
             >查询
             </a-button
             >
             <a-button
               style="margin-left: 8px"
-              @click="$refs.table.refresh()"
+              @click="resetSearchForm()"
             >重置
             </a-button
             >
@@ -35,13 +35,14 @@
         <a-button type="primary" icon="plus" @click="handleAdd">新建</a-button>
       </div>
       <!-- 表格数据-->
-      <s-table
+      <a-table
         ref="table"
-        size="default"
-        :rowKey="rowKey"
         :columns="columns"
-        :data="loadData"
-        showPagination="auto"
+        :row-key="rowKey"
+        :data-source="dataSource"
+        :pagination="pagination"
+        :loading="loading"
+        @change="handleTableChange"
       >
 
 
@@ -54,25 +55,35 @@
         </span>
         <span slot="templateAction" slot-scope="text, record">
           <template>
-            <a @click="handleEdit(record)">模板编辑</a>
+            <a @click="handleTemplateEdit(record)">模板编辑</a>
             <a-divider type="vertical"/>
             <a @click="handleProperty(record)">属性配置</a>
           </template>
         </span>
-      </s-table>
+      </a-table>
       <!--新建表单-->
       <form-page ref="createModal"/>
       <template-property-model ref="propertyModel"/>
     </a-card>
-  </page-header-wrapper>
+    <a-card v-show="!tableShow">
+      <slot slot="title">
+        <div style="position:relative;height:32px;line-height:32px;padding:0 1%">
+          {{ cardTitle }}
+          <div style="position:absolute;right:1%;top:0"><a-button @click="backToPage(false)">返回上级</a-button></div>
+        </div>
+      </slot>
+      <template-info ref="templateInfo"/>
+    </a-card>
+
+  </div>
 </template>
 
 <script>
-  import moment from 'moment'
+  import TableMixin from '@/mixins/TableMixin'
   import { STable, Ellipsis } from '@/components'
   import { getAllTemplateGroup } from '@/api/templategroup'
   import templatePropertyModel from '@/views/template/templatePropertyModel'
-
+  import templateInfo from '@/views/template/templateInfo'
   import FormPage from './form'
 
   const columns = [
@@ -116,27 +127,16 @@
       STable,
       Ellipsis,
       FormPage,
-      templatePropertyModel
+      templatePropertyModel,
+      templateInfo
 
     },
+    mixins:[TableMixin],
     data() {
-      this.columns = columns
       return {
-        rowKey: 'id',
-        // 高级搜索 展开/关闭
-        advanced: false,
-        // 查询参数
-        queryParam: {},
-        // 加载数据方法 必须为 Promise 对象
-        loadData: (parameter) => {
-          console.log(parameter)
-          const requestParameters = Object.assign({}, parameter, this.queryParam)
-          console.log('loadData request parameters:', requestParameters)
-          return getAllTemplateGroup(requestParameters).then((res) => {
-            console.log(res)
-            return res.data
-          })
-        }
+        columns:columns,
+        getPage: getAllTemplateGroup,
+        cardTitle: ''
       }
     },
 
@@ -158,6 +158,11 @@
       },
       handleProperty(records) {
         this.$refs.propertyModel.add({ title: '模板属性', groupInfo: records })
+      },
+      handleTemplateEdit(records){
+        this.switchPage()
+        this.cardTitle='编辑模板组 -'+records.name;
+        this.$refs.templateInfo.show(records.id, records.name)
       }
 
 

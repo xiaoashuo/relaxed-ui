@@ -49,6 +49,9 @@
   import 'codemirror/lib/codemirror.css'
   import 'codemirror/theme/dracula.css'
   import 'codemirror/mode/sql/sql.js'
+  // 全屏插件
+  import 'codemirror/addon/display/fullscreen.js'
+  import 'codemirror/addon/display/fullscreen.css'
   import { getDbSelectData } from '@/api/datasource'
   import {getAllTemplateGroupSelect} from '@/api/templategroup'
   import {getTemplateInfosByGid} from '@/api/template'
